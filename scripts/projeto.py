@@ -21,8 +21,7 @@ from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 
 print("EXECUTE ANTES da 1.a vez: ")
-print("wget https://github.com/Insper/robot21.1/raw/main/projeto/ros_projeto/scripts/MobileNetSSD_deploy.caffemodel
-")
+print("wget https://github.com/Insper/robot21.1/raw/main/projeto/ros_projeto/scripts/MobileNetSSD_deploy.caffemodel")
 print("PARA TER OS PESOS DA REDE NEURAL")
 
 import visao_module
