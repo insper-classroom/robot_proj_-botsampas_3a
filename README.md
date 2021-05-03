@@ -1,15 +1,12 @@
 # Base para Projeto 1 - Robótica 
 
-Nome do grupo: 
-
-____________
+Nome do grupo: BotSampas
 
 Nome dos integrantes: 
 
-* pessoa 1
-* pessoa 2
-* pessoa 3
-* pessoa 4
+* Fernando Peres Marques Gameiro França
+* Luiza Valezim Augusto Pinto
+* Vinicius Grando Eller
 
 
 Visite sempre o enunciado abaixo para atualizacões: 
