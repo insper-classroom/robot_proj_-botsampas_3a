@@ -30,6 +30,9 @@ import math
 ranges = None
 estagio1 = True
 estagio2 = False
+estagio3 = False
+ultima_placa = 0
+aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 minv = 0
 maxv = 10
 vel_linear = 0.1
@@ -51,42 +54,44 @@ def morpho_limpa(mask):
     mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
     return mask
 
-
-def center_of_mass(mask):
-    """ Retorna uma tupla (cx, cy) que desenha o centro do contorno"""
-    M = cv2.moments(mask)
-    # Usando a expressão do centróide definida em: https://en.wikipedia.org/wiki/Image_moment
-    cX = int(M["m10"] / M["m00"])
-    cY = int(M["m01"] / M["m00"])
-    return [int(cX), int(cY)]
-
 def processa_imagem(image):
     global vel
     global vel_linear
     global vel_ang
     global estagio1
     global estagio2
+    global estagio3
+    global aruco_dict
+    global ultima_placa
+
+    img = image.copy()
+    img2 = image.copy()
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)
+
+    gray = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
+    mask = segmenta_linha_amarela_hsv(img)
+    mask = morpho_limpa(mask)
+
+    M = cv2.moments(mask)
+    h, w, d = image.shape
+    print(ultima_placa)
+
+    corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
+    aruco.drawDetectedMarkers(image, corners, ids)
 
     if estagio1:
-        img = image.copy()
-        img2 = image.copy()
 
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        gray = cv2.cvtColor(image.copy(), cv2.COLOR_BGR2GRAY)
-        mask = segmenta_linha_amarela_hsv(img)
-        mask = morpho_limpa(mask)
-
-        M = cv2.moments(mask)
-        h, w, d = image.shape
-
-        aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-        # parameters  = aruco.DetectorParameters_create()
-        # parameters.minDistanceToBorder = 0
-        # parameters.adaptiveThreshWinSizeMax = 1000
-
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
-        print(ids)
-        aruco.drawDetectedMarkers(image, corners, ids)
+        try:
+            ids = np.squeeze(ids)
+            for i in ids:
+                if i == 150:
+                    ultima_placa = "ESQUERDA"
+                elif i == 50:
+                    ultima_placa = "DIREITA"
+        except Exception:
+            pass
 
         if M['m00'] > 0:
             cx = int(M['m10']/M['m00'])
@@ -102,21 +107,46 @@ def processa_imagem(image):
                 vel_linear = 0.5
 
             vel_ang = -float(err) / 100
-        
-        try:
-            for i in np.squeeze(ids):
-                if i in [50, 150]:
-                    if ranges[0] < 1:
-                        estagio1, estagio2 = False, True
-        except Exception as e:
-            pass
-
+        else:
+            estagio1, estagio2 = False, True
     elif estagio2:
-        vel_lin = 0
-        vel_ang = 0
+        vel_linear = 0
+        vel_ang = math.pi/10
 
+        if M['m00'] > 0:
+            estagio2, estagio3 = False, True
+    elif estagio3:
+        
+        if ultima_placa == "ESQUERDA":
+            img2 = img2[:, :3*w//4]
+        else:
+            img2 = img2[:, w//4:]
+        
+        mask = segmenta_linha_amarela_hsv(img2)
+        mask = morpho_limpa(mask)
 
-    
+        cv2.imshow("mask", mask)
+
+        M = cv2.moments(mask)
+        h, w, d = image.shape
+
+        if M['m00'] > 0:
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+            cv2.circle(image, (cx, cy), 10, (0,0,255), -1)
+
+            err = cx - w/2
+            
+            # Diminuir velocidade em curvas
+            if abs(err) > 10:
+                vel_linear = 0.2
+            else:
+                vel_linear = 0.5
+
+            vel_ang = -float(err) / 100
+        else:
+            estagio3, estagio2 = False, True
+
 
 def scaneou(dado):
     global ranges
@@ -132,6 +162,7 @@ def scaneou(dado):
 def roda_todo_frame(imagem):
     try:
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        # cv_image = bridge.imgmsg_to_cv2(imagem, "bgr8")
         processa_imagem(cv_image)
         cv2.imshow("Camera", cv_image)
         cv2.waitKey(1)
@@ -143,9 +174,11 @@ if __name__=="__main__":
     rospy.init_node("q3")
 
     topico_imagem = "/camera/image/compressed"
+    # topico_imagem2 = "/camera/image"
     velocidade_saida = rospy.Publisher("/cmd_vel", Twist, queue_size = 3 )
     recebe_scan = rospy.Subscriber("/scan", LaserScan, scaneou)
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
+    # recebedor = rospy.Subscriber(topico_imagem2, Image, roda_todo_frame, queue_size=4, buff_size = 2**24)
 
     while not rospy.is_shutdown():
         vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
