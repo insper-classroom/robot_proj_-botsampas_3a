@@ -118,9 +118,9 @@ def processa_imagem(image):
     elif estagio3:
         
         if ultima_placa == "ESQUERDA":
-            img2 = img2[:, :3*w//4]
+            img2[:, 3*w//4:] = [0, 0, 0]
         else:
-            img2 = img2[:, w//4:]
+            img2[:, :w//4] = [0, 0, 0]
         
         mask = segmenta_linha_amarela_hsv(img2)
         mask = morpho_limpa(mask)
@@ -145,7 +145,7 @@ def processa_imagem(image):
 
             vel_ang = -float(err) / 100
         else:
-            estagio3, estagio2 = False, True
+            estagio1, estagio2 = False, True
 
 
 def scaneou(dado):
