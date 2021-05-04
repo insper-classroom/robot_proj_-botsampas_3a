@@ -14,7 +14,7 @@ from __future__ import print_function, division
 import rospy 
 
 import numpy as np
-
+import cormodule
 import cv2
 import cv2.aruco as aruco
 
@@ -32,6 +32,7 @@ estagio1 = True
 estagio2 = False
 estagio3 = False
 ultima_placa = 0
+aruco_cor = 0
 aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 minv = 0
 maxv = 10
@@ -53,6 +54,21 @@ def morpho_limpa(mask):
     mask = cv2.morphologyEx( mask, cv2.MORPH_OPEN, kernel )
     mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
     return mask
+
+def aruco_creeper(ids):
+    global aruco_cor
+    try:
+        ids = np.squeeze(ids)
+        for i in ids:
+            if i in [21, 22, 23]:
+                aruco_cor = "VERDE"
+            elif i in [12,11]:
+                aruco_cor = "CIANO"
+            elif i in [21]:
+                aruco_cor = "BERGAMOTA"
+            
+    except Exception:
+        pass
 
 def processa_imagem(image):
     global vel
@@ -77,12 +93,14 @@ def processa_imagem(image):
     M = cv2.moments(mask)
     h, w, d = image.shape
     print(ultima_placa)
+    print(aruco_cor)
+
 
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
     aruco.drawDetectedMarkers(image, corners, ids)
+    aruco_creeper(ids)
 
     if estagio1:
-
         try:
             ids = np.squeeze(ids)
             for i in ids:
@@ -115,8 +133,9 @@ def processa_imagem(image):
 
         if M['m00'] > 0:
             estagio2, estagio3 = False, True
+
     elif estagio3:
-        
+    
         if ultima_placa == "ESQUERDA":
             img2[:, 3*w//4:] = [0, 0, 0]
         else:
@@ -157,7 +176,7 @@ def scaneou(dado):
     ranges = np.array(dado.ranges).round(decimals=2)
     minv = dado.range_min 
     maxv = dado.range_max
- 
+
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
     try:
