@@ -35,18 +35,22 @@ from cv_bridge import CvBridge, CvBridgeError
 
 
 
-def identifica_cor(frame):
+def identifica_cor(frame, cor):
     '''
     Segmenta o maior objeto cuja cor é parecida com cor_h (HUE da cor, no espaço HSV).
     '''
 
     frame_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
+    if cor == "ciano":
+        cor_menor = np.array([40, 40, 40])
+        cor_maior = np.array([70, 255, 255])
 
+    elif cor == "verde":
+        # Identifica a CIANO
+        cor_menor = np.array([40, 40, 40])
+        cor_maior = np.array([70, 255, 255])
     
-    # Identifica a cor 
-    cor_menor = np.array([40, 40, 40])
-    cor_maior = np.array([70, 255, 255])
     segmentado_cor = cv2.inRange(frame_hsv, cor_menor, cor_maior)
 
 
