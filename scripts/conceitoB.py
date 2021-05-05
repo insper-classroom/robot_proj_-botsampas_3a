@@ -6,7 +6,7 @@ from __future__ import print_function, division
 
 # Para rodar, recomendamos que faça:
 # 
-#    roslaunch my_simulation pista_u.launch
+#    roslaunch my_simulation forca.launch
 #
 # Depois o controlador do braço:
 #
@@ -25,7 +25,6 @@ from cv_bridge import CvBridge, CvBridgeError
 import statsmodels.api as sm
 
 import math
-
 
 ranges = None
 estagio1 = True
@@ -51,7 +50,6 @@ def morpho_limpa(mask):
     mask = cv2.morphologyEx( mask, cv2.MORPH_OPEN, kernel )
     mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
     return mask
-
 
 def center_of_mass(mask):
     """ Retorna uma tupla (cx, cy) que desenha o centro do contorno"""
@@ -85,9 +83,9 @@ def processa_imagem(image):
         # # parameters.minDistanceToBorder = 0
         # # parameters.adaptiveThreshWinSizeMax = 1000
 
-        # corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
-        # print(ids)
-        # aruco.drawDetectedMarkers(image, corners, ids)
+        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
+        print(ids)
+        aruco.drawDetectedMarkers(image, corners, ids)
 
         if M['m00'] > 0:
             cx = int(M['m10']/M['m00'])
@@ -105,17 +103,16 @@ def processa_imagem(image):
             vel_ang = -float(err) / 100
         
         
-        # try:
-        #     for i in np.squeeze(ids):
-        #         if i in [50, 150]:
-        #             if ranges[0] < 1:
-        #                 estagio1, estagio2 = False, True
-        # except Exception as e:
-        #     pass
+        # Verificando os ids
+        for i in np.squeeze(ids):
+            if i == 50 or i ==150:
+                estagio1 = False
+                estagio2 = True
 
     elif estagio2:
         vel_lin = 0
         vel_ang = 0
+
 
 
 
@@ -160,21 +157,21 @@ if __name__=="__main__":
             vel = Twist(Vector3(0,0,0), Vector3(0,0,0))
         else:
             vel = Twist(Vector3(10,0,0), Vector3(0,0,0))
-        if len(media) != 0 and len(centro) != 0:
-            print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
-            print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
+        # if len(media) != 0 and len(centro) != 0:
+        #     print("Média dos vermelhos: {0}, {1}".format(media[0], media[1]))
+        #     print("Centro dos vermelhos: {0}, {1}".format(centro[0], centro[1]))
 
-            if abs(media[0] - centro[0]) > 50:
-                if (media[0] > centro[0]):
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0,-velocidade_angular))
-                if (media[0] < centro[0]):
-                    vel = Twist(Vector3(0,0,0), Vector3(0,0,velocidade_angular))
-            else:
-                if not distancia_passou:
-                    if (media[0] > centro[0]):
-                        vel = Twist(Vector3(velocidade_linear,0,0), Vector3(0,0,-velocidade_angular))
-                    if (media[0] < centro[0]):
-                        vel = Twist(Vector3(velocidade_linear,0,0), Vector3(0,0,velocidade_angular))
+        #     if abs(media[0] - centro[0]) > 50:
+        #         if (media[0] > centro[0]):
+        #             vel = Twist(Vector3(0,0,0), Vector3(0,0,-velocidade_angular))
+        #         if (media[0] < centro[0]):
+        #             vel = Twist(Vector3(0,0,0), Vector3(0,0,velocidade_angular))
+        #     else:
+        #         if not distancia_passou:
+        #             if (media[0] > centro[0]):
+        #                 vel = Twist(Vector3(velocidade_linear,0,0), Vector3(0,0,-velocidade_angular))
+        #             if (media[0] < centro[0]):
+        #                 vel = Twist(Vector3(velocidade_linear,0,0), Vector3(0,0,velocidade_angular))
             
         velocidade_saida.publish(vel)
         vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
