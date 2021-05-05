@@ -1,8 +1,4 @@
-#! /usr/bin/env python3
-# -*- coding:utf-8 -*-
-
 from __future__ import print_function, division
-
 
 # Para rodar, recomendamos que faça:
 # 
@@ -11,35 +7,42 @@ from __future__ import print_function, division
 # Depois o controlador do braço:
 #
 #    roslaunch mybot_description mybot_control2.launch 	
+
 import rospy 
-
 import numpy as np
-
 import cv2
 import cv2.aruco as aruco
+import statsmodels.api as sm
+import math
+import visao_module
 
 from geometry_msgs.msg import Twist, Vector3
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
-import statsmodels.api as sm
 
-import math
+#--------------------------------------------------------------------------
 
+# DECLARANDO VARIÁVEIS
 
 ranges = None
 estagio1 = True
 estagio2 = False
 estagio3 = False
+estagio_creeper = False
 ultima_placa = 0
 aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 minv = 0
 maxv = 10
-vel_linear = 0.1
+vel_linear = 0
 vel_ang = 0
 vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
 
 bridge = CvBridge()
+
+#--------------------------------------------------------------------------
+
+# DECLARANDO FUNÇÕES
 
 def segmenta_linha_amarela_hsv(hsv):
     """ REturns a mask within the range"""
@@ -61,8 +64,11 @@ def processa_imagem(image):
     global estagio1
     global estagio2
     global estagio3
+    global estagio_creeper
     global aruco_dict
     global ultima_placa
+    global media
+    global centro
 
     img = image.copy()
     img2 = image.copy()
@@ -76,15 +82,32 @@ def processa_imagem(image):
 
     M = cv2.moments(mask)
     h, w, d = image.shape
-    print(ultima_placa)
 
+
+    # ARUCO
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
     aruco.drawDetectedMarkers(image, corners, ids)
 
+
+    # Verificando os creepers
+    try:
+        ids = np.squeeze(ids)
+        for i in ids:
+            if i == 22:
+                vel_linear = 0
+                vel_ang = 0
+                estagio1, estagio2, estagio3 = False, False, False
+                estagio_crepper = True
+
+                # print("AQUIIIII")
+    except Exception:
+        pass
+
+    
+    # ESTÁGIOS (1,2,3)
     if estagio1:
 
         try:
-            ids = np.squeeze(ids)
             for i in ids:
                 if i == 150:
                     ultima_placa = "ESQUERDA"
@@ -93,6 +116,7 @@ def processa_imagem(image):
         except Exception:
             pass
 
+        
         if M['m00'] > 0:
             cx = int(M['m10']/M['m00'])
             cy = int(M['m01']/M['m00'])
@@ -109,12 +133,19 @@ def processa_imagem(image):
             vel_ang = -float(err) / 100
         else:
             estagio1, estagio2 = False, True
+
+
+
     elif estagio2:
         vel_linear = 0
         vel_ang = math.pi/10
 
         if M['m00'] > 0:
             estagio2, estagio3 = False, True
+
+
+
+
     elif estagio3:
         
         if ultima_placa == "ESQUERDA":
@@ -152,8 +183,8 @@ def scaneou(dado):
     global ranges
     global minv
     global maxv
-    print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
-    print("Leituras:")
+    # print("Faixa valida: ", dado.range_min , " - ", dado.range_max )
+    # print("Leituras:")
     ranges = np.array(dado.ranges).round(decimals=2)
     minv = dado.range_min 
     maxv = dado.range_max
@@ -162,12 +193,16 @@ def scaneou(dado):
 def roda_todo_frame(imagem):
     try:
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
+        media, centro, maior_area = visao_module.identifica_cor(cv_image)
         # cv_image = bridge.imgmsg_to_cv2(imagem, "bgr8")
         processa_imagem(cv_image)
         cv2.imshow("Camera", cv_image)
         cv2.waitKey(1)
     except CvBridgeError as e:
         print('ex', e)
+
+
+    
 
 if __name__=="__main__":
 
@@ -180,7 +215,26 @@ if __name__=="__main__":
     recebedor = rospy.Subscriber(topico_imagem, CompressedImage, roda_todo_frame, queue_size=4, buff_size = 2**24)
     # recebedor = rospy.Subscriber(topico_imagem2, Image, roda_todo_frame, queue_size=4, buff_size = 2**24)
 
-    while not rospy.is_shutdown():
-        vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
-        velocidade_saida.publish(vel)
-        rospy.sleep(0.1)
+
+    try:
+
+        while not rospy.is_shutdown():
+
+
+            if estagio_creeper:
+                if len(media) != 0 and len(centro) != 0:
+                    if abs(media[0] - centro[0]) > 50:
+                        if (media[0] > centro[0]):
+                            vel_ang = -0.2
+                        if (media[0] < centro[0]):
+                            vel_ang = 0.2
+
+                
+
+            vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
+            velocidade_saida.publish(vel)
+            rospy.sleep(0.1)
+
+
+    except rospy.ROSInterruptException:
+        print("  Já entendi... Já pode parar de dar CTRL+C xuxu")
