@@ -45,11 +45,11 @@ vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
 
 
 # Apresentações
-print("\n        Insper")
+print("\n              Insper")
 time.sleep(1)
-print("  Engenharia da Computação")
+print("     Engenharia da Computação")
 time.sleep(1)
-print("Robótica Computacional 2021.1")
+print("   Robótica Computacional 2021.1")
 time.sleep(2)
 
 print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
