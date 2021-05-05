@@ -8,6 +8,8 @@ from __future__ import print_function, division
 #
 #    roslaunch mybot_description mybot_control2.launch 	
 
+import time
+import os
 import rospy 
 import numpy as np
 import cv2
@@ -20,6 +22,9 @@ from geometry_msgs.msg import Twist, Vector3
 from sensor_msgs.msg import LaserScan
 from sensor_msgs.msg import Image, CompressedImage
 from cv_bridge import CvBridge, CvBridgeError
+from subprocess import call
+from colorama import Fore, Back, Style
+from colorama import init
 
 #--------------------------------------------------------------------------
 
@@ -38,9 +43,61 @@ vel_linear = 0
 vel_ang = 0
 vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
 
+
+# Apresentações
+print("\n        Insper")
+time.sleep(1)
+print("  Engenharia da Computação")
+time.sleep(1)
+print("Robótica Computacional 2021.1")
+time.sleep(2)
+
+print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
+time.sleep(2)
+print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
+time.sleep(2)
+print("               .")
+time.sleep(1)
+print("                 .")
+time.sleep(1)
+print("                   .")
+time.sleep(1)
+print("Lesgooo")
+time.sleep(2)
+
+print(Fore.YELLOW + "\nEstrelando...")
+time.sleep(1)
+print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
+time.sleep(2)
+print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
+time.sleep(2)
+print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
+time.sleep(2)
+
+
+print(Fore.GREEN + "\nFeat:")
+time.sleep(1)
+print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
+time.sleep(2)
+print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
+time.sleep(2)
+print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
+time.sleep(2)
+
+# Input
+print("Então vamos lá:")
+time.sleep(2)
+define_id = input("Qual o id que você quer? (22, sim, só tem essa opção) ")
+define_cor = input(str("Qual cor você quer? (ciano, verde, vermelho) "))
+
 bridge = CvBridge()
 
+
+
 #--------------------------------------------------------------------------
+
+
+
 
 # DECLARANDO FUNÇÕES
 
@@ -68,7 +125,6 @@ def processa_imagem(image):
     global aruco_dict
     global ultima_placa
     global media
-    global centro
 
     img = image.copy()
     img2 = image.copy()
@@ -93,9 +149,8 @@ def processa_imagem(image):
     try:
         ids = np.squeeze(ids)
         for i in ids:
-            if i == 22:
+            if i == define_id:
                 vel_linear = 0
-                vel_ang = 0
                 estagio1, estagio2, estagio3 = False, False, False
                 estagio_crepper = True
 
@@ -179,6 +234,17 @@ def processa_imagem(image):
             estagio1, estagio2 = False, True
 
 
+    
+    elif estagio_creeper:
+        if len(media) != 0 and len(centro) != 0:
+            if abs(media[0] - centro[0]) > 50:
+                if (media[0] > centro[0]):
+                    vel_ang = -0.2
+                if (media[0] < centro[0]):
+                    vel_ang = 0.2
+
+
+
 def scaneou(dado):
     global ranges
     global minv
@@ -193,7 +259,7 @@ def scaneou(dado):
 def roda_todo_frame(imagem):
     try:
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-        media, centro, maior_area = visao_module.identifica_cor(cv_image)
+        media, centro, maior_area = visao_module.identifica_cor(cv_image, define_cor)
         # cv_image = bridge.imgmsg_to_cv2(imagem, "bgr8")
         processa_imagem(cv_image)
         cv2.imshow("Camera", cv_image)
@@ -219,17 +285,6 @@ if __name__=="__main__":
     try:
 
         while not rospy.is_shutdown():
-
-
-            if estagio_creeper:
-                if len(media) != 0 and len(centro) != 0:
-                    if abs(media[0] - centro[0]) > 50:
-                        if (media[0] > centro[0]):
-                            vel_ang = -0.2
-                        if (media[0] < centro[0]):
-                            vel_ang = 0.2
-
-                
 
             vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
             velocidade_saida.publish(vel)
