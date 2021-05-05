@@ -45,44 +45,44 @@ vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
 
 
 # Apresentações
-print("\n        Insper")
-time.sleep(1)
-print("  Engenharia da Computação")
-time.sleep(1)
-print("Robótica Computacional 2021.1")
-time.sleep(2)
+# print("\n        Insper")
+# time.sleep(1)
+# print("  Engenharia da Computação")
+# time.sleep(1)
+# print("Robótica Computacional 2021.1")
+# time.sleep(2)
 
-print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
-time.sleep(2)
-print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
-time.sleep(2)
-print("               .")
-time.sleep(1)
-print("                 .")
-time.sleep(1)
-print("                   .")
-time.sleep(1)
-print("Lesgooo")
-time.sleep(2)
+# print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
+# time.sleep(2)
+# print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
+# time.sleep(2)
+# print("               .")
+# time.sleep(1)
+# print("                 .")
+# time.sleep(1)
+# print("                   .")
+# time.sleep(1)
+# print("Lesgooo")
+# time.sleep(2)
 
-print(Fore.YELLOW + "\nEstrelando...")
-time.sleep(1)
-print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
-time.sleep(2)
-print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
-time.sleep(2)
-print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
-time.sleep(2)
+# print(Fore.YELLOW + "\nEstrelando...")
+# time.sleep(1)
+# print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
+# time.sleep(2)
+# print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
+# time.sleep(2)
+# print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
+# time.sleep(2)
 
 
-print(Fore.GREEN + "\nFeat:")
-time.sleep(1)
-print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
-time.sleep(2)
-print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
-time.sleep(2)
-print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
-time.sleep(2)
+# print(Fore.GREEN + "\nFeat:")
+# time.sleep(1)
+# print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
+# time.sleep(2)
+# print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
+# time.sleep(2)
+# print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
+# time.sleep(2)
 
 # Input
 print("Então vamos lá:")
@@ -146,22 +146,26 @@ def processa_imagem(image):
     aruco.drawDetectedMarkers(image, corners, ids)
 
 
-    # Verificando os creepers
+    # Verificando cor e ID dos creepers (ainda sem a parte das cores junto)
     try:
         ids = np.squeeze(ids)
         for i in ids:
-            if i == define_id:
+            if i == int(define_id):
                 vel_linear = 0
-                estagio1, estagio2, estagio3 = False, False, False
+                estagio1 = False
+                estagio2 = False
+                estagio3 = False
                 estagio_crepper = True
+                print("AQUIIIII")
 
-                # print("AQUIIIII")
     except Exception:
         pass
 
     
     # ESTÁGIOS (1,2,3)
     if estagio1:
+
+        print("Estágio 1")
 
         try:
             for i in ids:
@@ -193,6 +197,9 @@ def processa_imagem(image):
 
 
     elif estagio2:
+
+        print (" Estágio 2")
+
         vel_linear = 0
         vel_ang = math.pi/10
 
@@ -203,6 +210,8 @@ def processa_imagem(image):
 
 
     elif estagio3:
+
+        print("Estágio 3")
         
         if ultima_placa == "ESQUERDA":
             img2[:, 3*w//4:] = [0, 0, 0]
@@ -237,6 +246,12 @@ def processa_imagem(image):
 
     
     elif estagio_creeper:
+
+        print ("Estágio Creeper")
+
+        vel_linear = 0
+        vel_ang = 0
+
         if len(media) != 0 and len(centro) != 0:
             if abs(media[0] - centro[0]) > 50:
                 if (media[0] > centro[0]):
@@ -286,7 +301,6 @@ if __name__=="__main__":
     try:
 
         while not rospy.is_shutdown():
-
             vel = Twist(Vector3(vel_linear,0,0), Vector3(0,0,vel_ang))
             velocidade_saida.publish(vel)
             rospy.sleep(0.1)
