@@ -35,6 +35,7 @@ estagio1 = True
 estagio2 = False
 estagio3 = False
 estagio_creeper = False
+pode  = True
 ultima_placa = 0
 aruco_dict  = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 minv = 0
@@ -89,14 +90,10 @@ print("Então vamos lá:")
 time.sleep(2)
 define_id = input("Qual o id que você quer? (22, sim, só tem essa opção) ")
 define_cor = input(str("Qual cor você quer? (ciano, verde, vermelho) "))
+# define_cor = "verde"
+# define_id = 21
 
 bridge = CvBridge()
-
-
-
-
-#--------------------------------------------------------------------------
-
 
 
 
@@ -126,6 +123,7 @@ def processa_imagem(image):
     global aruco_dict
     global ultima_placa
     global media
+    global pode
 
     img = image.copy()
     img2 = image.copy()
@@ -140,6 +138,10 @@ def processa_imagem(image):
     M = cv2.moments(mask)
     h, w, d = image.shape
 
+    cv_image2 = image.copy()
+    media, centro, maior_area = visao_module.identifica_cor(cv_image2, define_cor)
+    # cv2.imshow("Creeper", cv_image2)
+    print(maior_area)
 
     # ARUCO
     corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict)
@@ -150,17 +152,13 @@ def processa_imagem(image):
     try:
         ids = np.squeeze(ids)
         for i in ids:
-            if i == int(define_id):
-                vel_linear = 0
+            if i == int(define_id) and maior_area > 1500 and pode:
                 estagio1 = False
                 estagio2 = False
                 estagio3 = False
-                estagio_crepper = True
-                print("AQUIIIII")
-
+                estagio_creeper = True
     except Exception:
         pass
-
     
     # ESTÁGIOS (1,2,3)
     if estagio1:
@@ -193,9 +191,6 @@ def processa_imagem(image):
             vel_ang = -float(err) / 100
         else:
             estagio1, estagio2 = False, True
-
-
-
     elif estagio2:
 
         print (" Estágio 2")
@@ -205,10 +200,6 @@ def processa_imagem(image):
 
         if M['m00'] > 0:
             estagio2, estagio3 = False, True
-
-
-
-
     elif estagio3:
 
         print("Estágio 3")
@@ -220,8 +211,6 @@ def processa_imagem(image):
         
         mask = segmenta_linha_amarela_hsv(img2)
         mask = morpho_limpa(mask)
-
-        cv2.imshow("mask", mask)
 
         M = cv2.moments(mask)
         h, w, d = image.shape
@@ -242,9 +231,6 @@ def processa_imagem(image):
             vel_ang = -float(err) / 100
         else:
             estagio1, estagio2 = False, True
-
-
-    
     elif estagio_creeper:
 
         print ("Estágio Creeper")
@@ -252,12 +238,29 @@ def processa_imagem(image):
         vel_linear = 0
         vel_ang = 0
 
+        bateu = True if ranges[0] < 0.3 else False
+
+        if bateu:
+            estagio_creeper, estagio2 = False, True
+            pode = False
+        
         if len(media) != 0 and len(centro) != 0:
             if abs(media[0] - centro[0]) > 50:
                 if (media[0] > centro[0]):
-                    vel_ang = -0.2
+                    vel_ang = -0.1
+                    vel_linear = 0
                 if (media[0] < centro[0]):
-                    vel_ang = 0.2
+                    vel_ang = 0.1
+                    vel_linear = 0
+            else:
+                if not bateu:
+                    if (media[0] > centro[0]):
+                        vel_ang = -0.1
+                        vel_linear = 0.1
+                    if (media[0] < centro[0]):
+                        vel_ang = 0.1
+                        vel_linear = 0.1
+    
 
 
 
@@ -270,14 +273,14 @@ def scaneou(dado):
     ranges = np.array(dado.ranges).round(decimals=2)
     minv = dado.range_min 
     maxv = dado.range_max
+
  
 # A função a seguir é chamada sempre que chega um novo frame
 def roda_todo_frame(imagem):
     try:
         cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
-        media, centro, maior_area = visao_module.identifica_cor(cv_image, define_cor)
-        # cv_image = bridge.imgmsg_to_cv2(imagem, "bgr8")
         processa_imagem(cv_image)
+        # cv_image = bridge.imgmsg_to_cv2(imagem, "bgr8")
         cv2.imshow("Camera", cv_image)
         cv2.waitKey(1)
     except CvBridgeError as e:

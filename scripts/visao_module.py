@@ -99,4 +99,4 @@ def identifica_cor(frame, cor):
     cv2.putText(frame,"{:d} {:d}".format(*media),(20,100), 1, 4,(255,255,255),2,cv2.LINE_AA)
     cv2.putText(frame,"{:0.1f}".format(maior_contorno_area),(20,50), 1, 4,(255,255,255),2,cv2.LINE_AA)
 
-    return centro, centro, maior_contorno_area
+    return media, centro, maior_contorno_area
