@@ -47,7 +47,7 @@ def identifica_cor(frame, cor):
         cor_menor = np.array([40, 40, 40])
         cor_maior = np.array([70, 255, 255])
 
-    elif cor == "vermelho": # FIXME: Ainda não tenho certeza se está certo
+    elif cor == "vermelho":
         cor_menor = np.array([0, 200, 200])
         cor_maior = np.array([7, 255, 255])
     

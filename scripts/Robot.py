@@ -119,7 +119,7 @@ class Robot:
         if draw:
             aruco.drawDetectedMarkers(img, corners, ids)
         
-        ids = np.squeeze(ids)
+        ids = np.array(ids).flatten()
 
         return ids, img
 

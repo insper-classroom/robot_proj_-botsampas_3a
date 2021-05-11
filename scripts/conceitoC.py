@@ -42,51 +42,33 @@ ultima_placa = 0
 
 # # Apresentações
 # print("\n              Insper")
-# time.sleep(1)
 # print("     Engenharia da Computação")
-# time.sleep(1)
 # print("   Robótica Computacional 2021.1")
-# time.sleep(2)
 
 # print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
-# time.sleep(2)
 # print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
-# time.sleep(2)
 # print("               .")
-# time.sleep(1)
 # print("                 .")
-# time.sleep(1)
 # print("                   .")
-# time.sleep(1)
 # print("Lesgooo")
-# time.sleep(2)
 
 # print(Fore.YELLOW + "\nEstrelando...")
-# time.sleep(1)
 # print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
-# time.sleep(2)
 # print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
-# time.sleep(2)
 # print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
-# time.sleep(2)
 
 
 # print(Fore.GREEN + "\nFeat:")
-# time.sleep(1)
 # print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
-# time.sleep(2)
 # print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
-# time.sleep(2)
 # print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
-# time.sleep(2)
 
 # # Input
 # print("Então vamos lá:")
-# time.sleep(2)
 # define_id = input("Qual o id que você quer? (22, sim, só tem essa opção) ")
 # define_cor = input(str("Qual cor você quer? (ciano, verde, vermelho) "))
-define_cor = "verde"
-define_id = 21
+define_cor = "vermelho"
+define_id = 11
 
 bridge = CvBridge()
 
@@ -107,15 +89,16 @@ def main():
     M = robot.get_yellow_moments()
 
     # Verificando cor e ID dos creepers (ainda sem a parte das cores junto)
-    # try:
-    #     for i in ids:
-    #         if i == int(define_id) and maior_area > 1500 and pode:
-    #             estagio1 = False
-    #             estagio2 = False
-    #             estagio3 = False
-    #             estagio_creeper = True
-    # except Exception:
-    #     pass
+    print(maior_area, ids)
+    try:
+        for i in ids:
+            if i == int(define_id) and maior_area > 1500 and pode:
+                estagio1 = False
+                estagio2 = False
+                estagio3 = False
+                estagio_creeper = True
+    except Exception:
+        pass
     
     # ESTÁGIOS (1,2,3)
     if estagio1:
@@ -164,14 +147,14 @@ def main():
         if M['m00'] <= 0:
             estagio1, estagio2 = False, True
 
-    # elif estagio_creeper:
+    elif estagio_creeper:
 
-    #     print ("Estágio Creeper")
-    #     bateu = robot.go_to_creeper(creeper)
+        print ("Estágio Creeper")
+        bateu = robot.go_to_creeper(creeper)
 
-    #     if bateu:
-    #         estagio_creeper, estagio2 = False, True
-    #         pode = False
+        if bateu:
+            estagio_creeper, estagio2 = False, True
+            pode = False
 
     cv2.imshow("Main", robot.getImage(original=True))
 
