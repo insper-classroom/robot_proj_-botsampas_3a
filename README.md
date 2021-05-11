@@ -8,6 +8,7 @@ Nome dos integrantes:
 * Luiza Valezim Augusto Pinto
 * Vinicius Grando Eller
 
+Video do Conceito C: 
 
 Visite sempre o enunciado abaixo para atualizacões: 
 
