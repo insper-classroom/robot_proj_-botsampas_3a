@@ -28,45 +28,15 @@ from colorama import init
 from Robot import Robot
 from Creeper import Creeper
 
-#--------------------------------------------------------------------------
-
 # DECLARANDO VARIÁVEIS
 
 estagio1 = True
 estagio2 = False
 estagio3 = False
 estagio_creeper = False
-pode  = True
+nao_encontrou  = True
 ultima_placa = 0
 
-
-# # Apresentações
-# print("\n              Insper")
-# print("     Engenharia da Computação")
-# print("   Robótica Computacional 2021.1")
-
-# print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
-# print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
-# print("               .")
-# print("                 .")
-# print("                   .")
-# print("Lesgooo")
-
-# print(Fore.YELLOW + "\nEstrelando...")
-# print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
-# print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
-# print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
-
-
-# print(Fore.GREEN + "\nFeat:")
-# print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
-# print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
-# print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
-
-# # Input
-# print("Então vamos lá:")
-# define_id = input("Qual o id que você quer? (22, sim, só tem essa opção) ")
-# define_cor = input(str("Qual cor você quer? (ciano, verde, vermelho) "))
 define_cor = "vermelho"
 define_id = 11
 
@@ -82,7 +52,7 @@ def main():
     global estagio3
     global estagio_creeper
     global ultima_placa
-    global pode
+    global nao_encontrou
 
     media, centro, maior_area = creeper.identify_color(robot)
     ids, _ = robot.getAruco()
@@ -92,7 +62,7 @@ def main():
     print(maior_area, ids)
     try:
         for i in ids:
-            if i == int(define_id) and maior_area > 1500 and pode:
+            if i == int(define_id) and maior_area > 1500 and nao_encontrou:
                 estagio1 = False
                 estagio2 = False
                 estagio3 = False
@@ -154,7 +124,7 @@ def main():
 
         if bateu:
             estagio_creeper, estagio2 = False, True
-            pode = False
+            nao_encontrou = False
 
     cv2.imshow("Main", robot.getImage(original=True))
 
