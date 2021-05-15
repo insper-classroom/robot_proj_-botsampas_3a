@@ -37,6 +37,28 @@ estagio_creeper = False
 nao_encontrou  = True
 ultima_placa = 0
 
+print("\n              Insper")
+print("     Engenharia da Computação")
+print("   Robótica Computacional 2021.1")
+
+print(Fore.RED + "\nBem vindo/a ao nosso projeto!")
+print(Fore.WHITE + "Bora conhecer quem gastou muito tempo das suas vidas programando?")
+print("               .")
+print("                 .")
+print("                   .")
+print("Lesgooo")
+
+print(Fore.YELLOW + "\nEstrelando...")
+print(Fore.WHITE + "Fernando Peres Marques Gameiro França " + Fore.YELLOW + "(aka Françinha)")
+print(Fore.WHITE + "Luiza Valezim Augusto Pinto " + Fore.YELLOW + "(aka A Perfeita)")
+print(Fore.WHITE + "Vinicius Grando Eller " + Fore.YELLOW + "(aka Sampas, mas não é o Bot Sampas... longa história)")
+
+
+print(Fore.GREEN + "\nFeat:")
+print(Fore.WHITE + "Fábio Miranda " + Fore.GREEN + "(aka Mirandinha ou Miras)")
+print(Fore.WHITE + "Arnaldo Junior " + Fore.GREEN + "(aka Tiozão)")
+print(Fore.WHITE + "Diego " + Fore.GREEN + "(aka Diego) \n\n" + Fore.WHITE)
+
 define_cor = "vermelho"
 define_id = 11
 
