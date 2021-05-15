@@ -58,8 +58,6 @@ def main():
     ids, _ = robot.getAruco()
     M = robot.get_yellow_moments()
 
-    # Verificando cor e ID dos creepers (ainda sem a parte das cores junto)
-    print(maior_area, ids)
     try:
         for i in ids:
             if i == int(define_id) and maior_area > 1500 and nao_encontrou:
@@ -91,7 +89,7 @@ def main():
     
     elif estagio2:
 
-        print (" Estágio 2")
+        print ("Estágio 2")
 
         robot.rotate()
 
@@ -131,7 +129,7 @@ def main():
 
 if __name__=="__main__":
 
-    rospy.init_node("q3")
+    rospy.init_node("ConceitoC")
 
     robot = Robot()
     creeper = Creeper(define_cor, define_id)

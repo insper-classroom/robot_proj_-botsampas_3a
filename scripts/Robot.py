@@ -15,6 +15,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from subprocess import call
 from colorama import Fore, Back, Style
 from colorama import init
+from std_msgs.msg import Float64
 
 bridge = CvBridge()
 
@@ -37,23 +38,35 @@ class Robot:
         self.image_height = None
         self.image_width = None
         self.ranges = None
+        self.braco = Float64()
+        self.braco.data = -0.5
+        self.garra = Float64()
+        self.garra.data = -1
+
         
         self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
         self.vel_publisher = rospy.Publisher(
-			'/cmd_vel',
-			Twist, 
-			queue_size=3)
+            '/cmd_vel',
+            Twist, 
+            queue_size=3)
         self.laser_subscriber = rospy.Subscriber(
-			'/scan', 
-			LaserScan, 
-			self.laser_callback)
+            '/scan', 
+            LaserScan, 
+            self.laser_callback)
         self.image_subscriber = rospy.Subscriber(
             "/camera/image/compressed", 
             CompressedImage, 
             self.image_callback, 
             queue_size=4, 
             buff_size = 2**24)
-
+        self.braco_publisher = rospy.Publisher(
+            '/joint1_position_controller/command',
+            Float64,
+            queue_size=1)
+        self.garra_publisher = rospy.Publisher(
+            '/joint2_position_controller/command',
+            Float64,
+            queue_size=1)
     
     def laser_callback(self, dado):
         ranges = np.array(dado.ranges).round(decimals=2)
@@ -69,8 +82,11 @@ class Robot:
         except CvBridgeError as e:
             print('ex', e)
     
+    def publish_joints(self):
+        self.braco_publisher.publish(self.braco)
+        self.garra_publisher.publish(self.garra)
     
-    def publish_in_cmd_vel(self):
+    def publish_vel(self):
         self.vel_publisher.publish(self.velocity)
     
     def getVelocity(self):
@@ -79,6 +95,13 @@ class Robot:
     def setVelocity(self, vel_lin, vel_ang):
         self.velocity.linear.x = vel_lin
         self.velocity.angular.z = vel_ang
+    
+    def getBracoGarra(self):
+        return self.braco.data, self.garra.data
+    
+    def setBracoGarra(self, braco, garra):
+        self.braco.data = braco
+        self.garra.data = garra
     
     def getRanges(self, angle = None):
         if angle != None:
@@ -160,7 +183,7 @@ class Robot:
 
             self.setVelocity(vel_linear, vel_ang)
 
-        self.publish_in_cmd_vel()
+        self.publish_vel()
 
     
     def rotate(self, vel_ang = math.pi/10, clockwise = False):
@@ -169,7 +192,7 @@ class Robot:
         else:
             self.setVelocity(0, vel_ang)
         
-        self.publish_in_cmd_vel()
+        self.publish_vel()
     
     def go_to_creeper(self, creeper, min_distance = 0.3):
 
@@ -180,9 +203,9 @@ class Robot:
         if len(media) != 0 and len(centro) != 0:
             if abs(media[0] - centro[0]) > 50:
                 if (media[0] > centro[0]):
-                    self.setVelocity(0, -0.1)
+                    self.setVelocity(0, -0.3)
                 if (media[0] < centro[0]):
-                    self.setVelocity(0, 0.1)
+                    self.setVelocity(0, 0.3)
             else:
                 if not crashed:
                     if (media[0] > centro[0]):
@@ -192,8 +215,9 @@ class Robot:
         
         if crashed:
             self.setVelocity(0, 0)
+            self.setBracoGarra(1.5, 0)
 
-        self.publish_in_cmd_vel()
+        self.publish_vel()
 
         return crashed
     
