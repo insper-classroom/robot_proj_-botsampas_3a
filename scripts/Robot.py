@@ -16,6 +16,7 @@ from subprocess import call
 from colorama import Fore, Back, Style
 from colorama import init
 from std_msgs.msg import Float64
+import mobilenet_simples as mnet
 
 bridge = CvBridge()
 
@@ -67,6 +68,11 @@ class Robot:
             '/joint2_position_controller/command',
             Float64,
             queue_size=1)
+    
+    def detectMobileNet(self):
+        result_frame, result_tuples = mnet.detect(self.getImage())
+        print(result_tuples)
+        return result_tuples
     
     def laser_callback(self, dado):
         ranges = np.array(dado.ranges).round(decimals=2)
@@ -134,6 +140,9 @@ class Robot:
     
     def getHeight(self):
         return self.image_height
+    
+    def getCenter(self):
+        return (self.getWidth() // 2, self.getHeight() // 2)
     
     def getAruco(self, draw = False):
         corners, ids, rejectedImgPoints = aruco.detectMarkers(self.getImage(gray=True), self.aruco_dict)
@@ -216,6 +225,40 @@ class Robot:
         if crashed:
             self.setVelocity(0, 0)
             self.setBracoGarra(1.5, 0)
+
+        self.publish_vel()
+
+        return crashed
+    
+    def go_to_station(self, estacao, resultado_mobile, min_distance = 0.5):
+
+        centro = self.getCenter()
+        centro_estacao = None
+
+        crashed = True if self.getRanges(0) < min_distance else False
+
+
+        for each in resultado_mobile:
+            if each[0] == estacao:
+                centro_estacao = ((each[3][0] - each[2][0]) // 2) + each[2][0]
+                break
+        
+        if centro_estacao is not None:
+            if abs(centro_estacao - centro[0]) > 50:
+                if (centro_estacao > centro[0]):
+                    self.setVelocity(0, -0.3)
+                if (centro_estacao < centro[0]):
+                    self.setVelocity(0, 0.3)
+            else:
+                if not crashed:
+                    if (centro_estacao > centro[0]):
+                        self.setVelocity(0.1, -0.1)
+                    if (centro_estacao < centro[0]):
+                        self.setVelocity(0.1, 0.1)
+            
+            if crashed:
+                self.setVelocity(0, 0)
+                self.setBracoGarra(0, -1)
 
         self.publish_vel()
 

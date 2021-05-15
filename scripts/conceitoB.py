@@ -34,13 +34,15 @@ estagio1 = True
 estagio2 = False
 estagio3 = False
 estagio_creeper = False
+estagio_estacao = False
 nao_encontrou  = True
 ultima_placa = 0
 min_vel_linear = 0.2
 max_vel_linear = 0.5
 
 define_cor = "verde"
-define_id = 21
+define_id = 13
+define_estacao = "car"
 
 bridge = CvBridge()
 
@@ -53,6 +55,7 @@ def main():
     global estagio2
     global estagio3
     global estagio_creeper
+    global estagio_estacao
     global ultima_placa
     global nao_encontrou
     global min_vel_linear
@@ -62,6 +65,7 @@ def main():
     ids, _ = robot.getAruco()
     M = robot.get_yellow_moments()
     robot.publish_joints()
+    resultado_mobile = robot.detectMobileNet()
 
     # Verificando cor e ID dos creepers
     try:
@@ -71,6 +75,17 @@ def main():
                 estagio2 = False
                 estagio3 = False
                 estagio_creeper = True
+    except Exception:
+        pass
+    
+    try:
+        for i in resultado_mobile:
+            if i[0] == define_estacao and not nao_encontrou:
+                estagio1 = False
+                estagio2 = False
+                estagio3 = False
+                estagio_creeper = False
+                estagio_estacao = True
     except Exception:
         pass
     
@@ -97,7 +112,7 @@ def main():
 
         print ("Estágio 2")
 
-        robot.rotate()
+        robot.rotate(clockwise=True)
 
         if M['m00'] > 0:
             estagio2, estagio3 = False, True
@@ -131,6 +146,13 @@ def main():
             nao_encontrou = False
             min_vel_linear = 0.1
             max_vel_linear = 0.1
+    
+    elif estagio_estacao:
+        print ("Estágio Estacao")
+        bateu = robot.go_to_station(define_estacao, resultado_mobile)
+
+        if bateu:
+            estagio_estacao = False
 
     cv2.imshow("Main", robot.getImage(original=True))
 
