@@ -8,7 +8,7 @@ Nome dos integrantes:
 * Luiza Valezim Augusto Pinto
 * Vinicius Grando Eller
 
-Video do Conceito C: 
+**Video dos Conceitos**: [Google Drive](https://drive.google.com/drive/folders/1Jimt0gn0aKYe24xxS2Mx1oAz1IM2G1Jn?usp=sharing) 
 
 Visite sempre o enunciado abaixo para atualizacões: 
 
