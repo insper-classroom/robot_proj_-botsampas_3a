@@ -16,17 +16,21 @@ from subprocess import call
 from colorama import Fore, Back, Style
 from colorama import init
 
+
 class Creeper:
     def __init__(self, color, id):
         self.color = color
         self.id = id
     
+    # Recebe a cor do creeper 
     def getColor(self):
         return self.color
     
+    # Recebe o ID do creeper
     def getId(self):
         return self.id
 
+    # Identifica a média, o centro e a maior área do creeper com base na visão do robô
     def identify_color(self, robot):
         media, centro, maior_area = visao_module.identifica_cor(robot.getImage(), self.getColor())
         return media, centro, maior_area

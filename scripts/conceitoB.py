@@ -40,9 +40,12 @@ ultima_placa = 0
 min_vel_linear = 0.2
 max_vel_linear = 0.5
 
-define_cor = "verde"
-define_id = 13
-define_estacao = "car"
+tupla = ["verde", 23, "horse"]
+
+define_cor = tupla[0]
+define_id = tupla[1]
+define_estacao = tupla[2]
+
 
 bridge = CvBridge()
 

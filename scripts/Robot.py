@@ -21,12 +21,14 @@ import mobilenet_simples as mnet
 bridge = CvBridge()
 
 def segment_yellow_line(hsv):
+    # Segmenta a cor amarela da pista e devolve a máscara
     low = np.array([25, 150, 150])
     high = np.array([35, 255, 255])
     mask = cv2.inRange(hsv, low, high)
     return mask
 
 def morpho_clean(mask):
+    # Limpa a máscara feita na segmentação 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(6,6))
     mask = cv2.morphologyEx( mask, cv2.MORPH_OPEN, kernel )
     mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
@@ -69,11 +71,13 @@ class Robot:
             Float64,
             queue_size=1)
     
+    # Detecta a MobileNet na visão do robô e devolve uma tupla dos resultados
     def detectMobileNet(self):
         result_frame, result_tuples = mnet.detect(self.getImage())
         print(result_tuples)
         return result_tuples
     
+    # Define as distâncias do robô até as estações
     def laser_callback(self, dado):
         ranges = np.array(dado.ranges).round(decimals=2)
         self.setRanges(ranges)
@@ -88,41 +92,51 @@ class Robot:
         except CvBridgeError as e:
             print('ex', e)
     
+    # Publica as juntas do robô (braço e garra)
     def publish_joints(self):
         self.braco_publisher.publish(self.braco)
         self.garra_publisher.publish(self.garra)
     
+    # Publica as velocidades
     def publish_vel(self):
         self.vel_publisher.publish(self.velocity)
     
+    # Pega a velocidade do robô
     def getVelocity(self):
         return self.velocity
     
+    # Define a velocidade linear e angular
     def setVelocity(self, vel_lin, vel_ang):
         self.velocity.linear.x = vel_lin
         self.velocity.angular.z = vel_ang
     
+    # Recebe os comandos para o braço e a garra
     def getBracoGarra(self):
         return self.braco.data, self.garra.data
     
+    # Define os comandos para o braço e a garra
     def setBracoGarra(self, braco, garra):
         self.braco.data = braco
         self.garra.data = garra
     
+    # Recebe as distâncias (????????????????????????????????????????????)
     def getRanges(self, angle = None):
         if angle != None:
             return self.ranges[angle]
         return self.ranges
     
+    # Define as distâncias (????????????????????????????????????????????)
     def setRanges(self, new_ranges):
         self.ranges = new_ranges
     
+    # Define a altura e largura da imagem recebida
     def setImage(self, new_image):
         self.image = new_image
         h, w, d = new_image.shape
         self.image_height = h
         self.image_width = w
     
+    # Recebe as imagens e faz a transformação para gray, rgb, hsv ou original
     def getImage(self, gray = False, rgb = False, hsv = False, original = False):
         if gray:
             return cv2.cvtColor(self.image.copy(), cv2.COLOR_BGR2GRAY)
@@ -135,15 +149,19 @@ class Robot:
 
         return self.image.copy()
     
+    # Retorna a largura da imagem
     def getWidth(self):
         return self.image_width
     
+    # Retorna a altura da imagem
     def getHeight(self):
         return self.image_height
     
+    # Retorna as cordenadas do centro da imagem
     def getCenter(self):
         return (self.getWidth() // 2, self.getHeight() // 2)
     
+    # Retorna a imagem com os ids marcados
     def getAruco(self, draw = False):
         corners, ids, rejectedImgPoints = aruco.detectMarkers(self.getImage(gray=True), self.aruco_dict)
         img = self.getImage()
@@ -155,6 +173,7 @@ class Robot:
 
         return ids, img
 
+    # Retorna os momentos da máscara (??????????????????????????????????????????????)
     def get_yellow_moments(self, img = None):
 
         if img is None:
@@ -167,7 +186,7 @@ class Robot:
 
         return M
 
-
+    #Ajusta a velocidade linear para que o robô siga a pista
     def follow_yellow_line(self, min_vel_linear = 0.2, max_vel_linear = 0.5, img = None):
 
         if img is None:
@@ -194,7 +213,7 @@ class Robot:
 
         self.publish_vel()
 
-    
+    # Ajusta a velocidade angular para que o robô siga a pista
     def rotate(self, vel_ang = math.pi/10, clockwise = False):
         if clockwise:
             self.setVelocity(0, -vel_ang)
@@ -203,6 +222,7 @@ class Robot:
         
         self.publish_vel()
     
+    # Ajusta o centro do robô para alinhar e ir na direção do creeper
     def go_to_creeper(self, creeper, min_distance = 0.3):
 
         media, centro, maior_area = creeper.identify_color(self)
@@ -230,6 +250,7 @@ class Robot:
 
         return crashed
     
+    # Muda o estado do robô para ele ir em direção da estação definida
     def go_to_station(self, estacao, resultado_mobile, min_distance = 0.5):
 
         centro = self.getCenter()
@@ -263,4 +284,3 @@ class Robot:
         self.publish_vel()
 
         return crashed
-    
