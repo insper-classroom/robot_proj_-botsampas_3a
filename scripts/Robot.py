@@ -21,14 +21,22 @@ import mobilenet_simples as mnet
 bridge = CvBridge()
 
 def segment_yellow_line(hsv):
-    # Segmenta a cor amarela da pista e devolve a máscara
+    """
+    Segmenta a cor amarela da pista e devolve a máscara
+    :param hsv  : imagem colorida em formato HSV
+    :return mask: mascara que destaca apenas amarelo 
+    """
     low = np.array([25, 150, 150])
     high = np.array([35, 255, 255])
     mask = cv2.inRange(hsv, low, high)
     return mask
 
 def morpho_clean(mask):
-    # Limpa a máscara feita na segmentação 
+    """
+    Limpa a máscara feita na segmentação
+    :param mask : mascara de qualquer cor 
+    :return mask: nova mascara mais segmentada e limpa 
+    """
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(6,6))
     mask = cv2.morphologyEx( mask, cv2.MORPH_OPEN, kernel )
     mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
@@ -36,6 +44,9 @@ def morpho_clean(mask):
 
 class Robot:
     def __init__(self):
+        """
+        Inicializa variaveis usadas pelo robo
+        """
         self.velocity = Twist()
         self.image = None
         self.image_height = None
@@ -71,18 +82,28 @@ class Robot:
             Float64,
             queue_size=1)
     
-    # Detecta a MobileNet na visão do robô e devolve uma tupla dos resultados
     def detectMobileNet(self):
+        """
+        Detecta a MobileNet na visão do robô 
+        :return result_tuples: tupla dos pesos encontrados
+        """
         result_frame, result_tuples = mnet.detect(self.getImage())
         print(result_tuples)
         return result_tuples
     
-    # Define as distâncias do robô até as estações
     def laser_callback(self, dado):
+        """
+        Define as distâncias do robô até as estações
+        :param dado: distancia extraidas pelo sensor
+        """
         ranges = np.array(dado.ranges).round(decimals=2)
         self.setRanges(ranges)
     
     def image_callback(self, imagem):
+        """
+        Capta a imagem e transforma em formato que possa ser usado por CV2
+        :param imagem: imagem a ser analisada 
+        """
         try:
             cv_image = bridge.compressed_imgmsg_to_cv2(imagem, "bgr8")
 
@@ -92,51 +113,47 @@ class Robot:
         except CvBridgeError as e:
             print('ex', e)
     
-    # Publica as juntas do robô (braço e garra)
     def publish_joints(self):
+        """
+        Publica os estados do braco/garra do robô  (inclinacao e aberto/fechado)
+        """
         self.braco_publisher.publish(self.braco)
         self.garra_publisher.publish(self.garra)
     
-    # Publica as velocidades
     def publish_vel(self):
+        """
+        Publica as velocidades
+        """
         self.vel_publisher.publish(self.velocity)
     
-    # Pega a velocidade do robô
+    """get e setter para velocidade"""
     def getVelocity(self):
         return self.velocity
-    
-    # Define a velocidade linear e angular
     def setVelocity(self, vel_lin, vel_ang):
         self.velocity.linear.x = vel_lin
         self.velocity.angular.z = vel_ang
     
-    # Recebe os comandos para o braço e a garra
+    """get e setter para estados do braco/garra do robô """
     def getBracoGarra(self):
         return self.braco.data, self.garra.data
-    
-    # Define os comandos para o braço e a garra
     def setBracoGarra(self, braco, garra):
         self.braco.data = braco
         self.garra.data = garra
     
-    # Recebe as distâncias (????????????????????????????????????????????)
+    """get e setter das distâncias encontradas pelo sensor"""
     def getRanges(self, angle = None):
         if angle != None:
             return self.ranges[angle]
-        return self.ranges
-    
-    # Define as distâncias (????????????????????????????????????????????)
+        return self.ranges    
     def setRanges(self, new_ranges):
         self.ranges = new_ranges
     
-    # Define a altura e largura da imagem recebida
+    """get e setter das imagens, pode transforma-las em varias mascaras diferentes (gray, hsv, rgb), depende do uso"""
     def setImage(self, new_image):
         self.image = new_image
         h, w, d = new_image.shape
         self.image_height = h
         self.image_width = w
-    
-    # Recebe as imagens e faz a transformação para gray, rgb, hsv ou original
     def getImage(self, gray = False, rgb = False, hsv = False, original = False):
         if gray:
             return cv2.cvtColor(self.image.copy(), cv2.COLOR_BGR2GRAY)
@@ -149,20 +166,31 @@ class Robot:
 
         return self.image.copy()
     
-    # Retorna a largura da imagem
     def getWidth(self):
+        """
+        Retorna a largura da imagem
+        """
         return self.image_width
     
-    # Retorna a altura da imagem
     def getHeight(self):
+        """
+        Retorna a altura da imagem
+        """
         return self.image_height
     
-    # Retorna as cordenadas do centro da imagem
     def getCenter(self):
+        """
+        Retorna as cordenadas do centro da imagem
+        """
         return (self.getWidth() // 2, self.getHeight() // 2)
     
-    # Retorna a imagem com os ids marcados
     def getAruco(self, draw = False):
+        """
+        Utilizada para operar com o aruco, pode retornar a imagem com os ids marcados
+        :param draw: booleano que aponta se o quadrado que contorna o aruco aparecera na imagem final
+        :return img: retorna a imagem com ou sem o desenho
+        :return ids: dicionario de dicionarios - armazena todos os ids encontrados na imagem 
+        """
         corners, ids, rejectedImgPoints = aruco.detectMarkers(self.getImage(gray=True), self.aruco_dict)
         img = self.getImage()
 
@@ -173,9 +201,11 @@ class Robot:
 
         return ids, img
 
-    # Retorna os momentos da máscara (??????????????????????????????????????????????)
     def get_yellow_moments(self, img = None):
-
+        """
+        Retorna os momentos da máscara, para futuro calculo do centro de massa de um objeto
+        :return M: momentos de um objeto
+        """
         if img is None:
             img = self.getImage(hsv=True)
 
@@ -186,9 +216,12 @@ class Robot:
 
         return M
 
-    #Ajusta a velocidade linear para que o robô siga a pista
     def follow_yellow_line(self, min_vel_linear = 0.2, max_vel_linear = 0.5, img = None):
-
+        """
+        Ajusta a velocidade linear para que o robô siga a pista, em retas sendo mais rapido e curvas sendo mais devagar
+        :param min_vel_linear: velocidade minima nas curvas 
+        :param max_vel_linear: velocidade maxima nas retas 
+        """
         if img is None:
             img = self.getImage(hsv=True)
 
@@ -213,8 +246,12 @@ class Robot:
 
         self.publish_vel()
 
-    # Ajusta a velocidade angular para que o robô siga a pista
     def rotate(self, vel_ang = math.pi/10, clockwise = False):
+        """
+        Ajusta a velocidade angular para que o robô sempre volte a seguir a pista
+        :param clockwise: define se o robo gira em sentido horario ou anti
+        :param vel_ang: define a velocidade com que o robo rotacionara
+        """
         if clockwise:
             self.setVelocity(0, -vel_ang)
         else:
@@ -222,9 +259,12 @@ class Robot:
         
         self.publish_vel()
     
-    # Ajusta o centro do robô para alinhar e ir na direção do creeper
     def go_to_creeper(self, creeper, min_distance = 0.3):
-
+        """
+        Ajusta o centro do robô para alinhar e ir na direção do creeper
+        :param creeper: objeto da classe creeper
+        :param min_distancia: minima distancia para que o robo para antes de bater no creeper
+        """
         media, centro, maior_area = creeper.identify_color(self)
 
         crashed = True if self.getRanges(0) < min_distance else False
@@ -250,9 +290,13 @@ class Robot:
 
         return crashed
     
-    # Muda o estado do robô para ele ir em direção da estação definida
     def go_to_station(self, estacao, resultado_mobile, min_distance = 0.5):
-
+        """
+        Muda o estado do robô para ele ir em direção da estação definida
+        :param estacao: mostra a estacao que o robo deve focar em encontrar
+        :resultado_mobile: tupla com os pesos da mobile
+        :min_distance: minima distancia para arremessar o creeper 
+        """
         centro = self.getCenter()
         centro_estacao = None
 
