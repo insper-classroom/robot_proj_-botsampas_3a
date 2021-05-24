@@ -21,16 +21,28 @@ class Creeper:
     def __init__(self, color, id):
         self.color = color
         self.id = id
-    
-    # Recebe a cor do creeper 
+
     def getColor(self):
+        """
+        Recebe a cor do creeper 
+        :param self :
+        :return self.color:
+        """
         return self.color
     
-    # Recebe o ID do creeper
     def getId(self):
+        """
+        Recebe o ID do creeper 
+        :param self :
+        :return self.id:
+        """
         return self.id
 
-    # Identifica a média, o centro e a maior área do creeper com base na visão do robô
     def identify_color(self, robot):
+        """
+        Identifica a média, o centro e a maior área do creeper com base na visão do robô
+        :param self, robot:
+        :return media, centro, maior_area:
+        """
         media, centro, maior_area = visao_module.identifica_cor(robot.getImage(), self.getColor())
         return media, centro, maior_area
