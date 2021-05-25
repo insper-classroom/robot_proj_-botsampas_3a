@@ -37,10 +37,8 @@ estagio_creeper = False
 estagio_estacao = False
 nao_encontrou  = True
 ultima_placa = 0
-min_vel_linear = 0.2
-max_vel_linear = 0.5
 
-tupla = ["verde", 23, "horse"]
+tupla = ("ciano", 12, "dog")
 
 define_cor = tupla[0]
 define_id = tupla[1]
@@ -61,8 +59,6 @@ def main():
     global estagio_estacao
     global ultima_placa
     global nao_encontrou
-    global min_vel_linear
-    global max_vel_linear
 
     media, centro, maior_area = creeper.identify_color(robot)
     ids, _ = robot.getAruco()
@@ -92,7 +88,7 @@ def main():
     except Exception:
         pass
     
-    # ESTÁGIOS (1,2,3)
+    # ESTÁGIOS (1,2,3, Creeper, Estacao)
     if estagio1:
 
         print("Estágio 1")
@@ -106,7 +102,7 @@ def main():
         except Exception:
             pass
 
-        robot.follow_yellow_line(min_vel_linear=min_vel_linear, max_vel_linear=max_vel_linear)
+        robot.follow_yellow_line()
         
         if M['m00'] <= 0:
             estagio1, estagio2 = False, True
@@ -134,7 +130,7 @@ def main():
         
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-        robot.follow_yellow_line(img=img, min_vel_linear=min_vel_linear, max_vel_linear=max_vel_linear)
+        robot.follow_yellow_line(img=img)
 
         if M['m00'] <= 0:
             estagio1, estagio2 = False, True
@@ -147,8 +143,6 @@ def main():
         if bateu:
             estagio_creeper, estagio2 = False, True
             nao_encontrou = False
-            min_vel_linear = 0.1
-            max_vel_linear = 0.1
     
     elif estagio_estacao:
         print ("Estágio Estacao")
