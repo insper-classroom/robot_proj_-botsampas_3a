@@ -1,6 +1,8 @@
 import statsmodels.api as sm
 import cv2
 import numpy as np
+low = np.array([25, 150, 150])
+high = np.array([35, 255, 255])
 
 def segment_yellow_line(hsv):
     """
@@ -8,16 +10,14 @@ def segment_yellow_line(hsv):
     :param hsv  : imagem colorida em formato HSV
     :return mask: mascara que destaca apenas amarelo 
     """
-    low = np.array([25, 150, 150])
-    high = np.array([35, 255, 255])
-
     mask = cv2.inRange(hsv, low, high)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(6,6))
-    mask = cv2.morphologyEx( mask, cv2.MORPH_OPEN, kernel )
-    mask = cv2.morphologyEx( mask, cv2.MORPH_CLOSE, kernel )    
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    gray = cv2.cvtColor(mask, cv2.COLOR_GRAY2RGB)
 
-    return mask
+    return gray
 
 def ajuste_linear_x_fy(mask):
     """Recebe uma imagem já limiarizada e faz um ajuste linear
@@ -38,14 +38,11 @@ def ajuste_linear_x_fy(mask):
 def ajuste_linear_grafico_x_fy(mask):
     """Faz um ajuste linear e devolve uma imagem rgb com aquele ajuste desenhado sobre uma imagem"""
     coef_angular, coef_linear = ajuste_linear_x_fy(mask)
-    print("x = {:3f}*y + {:3f}".format(coef_angular, coef_linear))
     pontos = np.where(mask==255) # esta linha é pesada e ficou redundante
     ximg = pontos[1]
     yimg = pontos[0]
     y_bounds = np.array([min(yimg), max(yimg)])
     x_bounds = coef_angular*y_bounds + coef_linear
-    print("x bounds", x_bounds)
-    print("y bounds", y_bounds)
     x_int = x_bounds.astype(dtype=np.int64)
     y_int = y_bounds.astype(dtype=np.int64)
     cv2.line(mask, (x_int[0], y_int[0]), (x_int[1], y_int[1]), color=(0,0,255), thickness=3);    

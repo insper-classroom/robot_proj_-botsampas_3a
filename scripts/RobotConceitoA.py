@@ -185,25 +185,25 @@ class Robot:
         if img is None:
             img = self.getImage(hsv=True)
 
-        mask = segment_yellow_line(img)
 
+        mask = segment_yellow_line(img)
+        mask = cv2.cvtColor(mask, cv2.COLOR_HSV2RGB)
+        mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
         M = cv2.moments(mask)
 
         return M
     
     def get_PDconstants(self, img):
-        a = cv2.cvtColor(img, cv2.COLOR_HSV2RGB)
-        a = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        # a = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-        gray = a.copy()
+        # mask = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        # mask = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        gray = img.copy()
         x, y = ajuste_linear_grafico_x_fy(gray)
         xi, xf = x
         yi, yf = y
 
         dy = yf - yi
         hip = ((xf-xi)**2 + (dy)**2)**0.5
-        seno = math.radians(dy/hip)
-        print(seno)
+        seno = dy/hip
         return seno
 
 
@@ -217,7 +217,7 @@ class Robot:
             img = self.getImage(hsv=True)
 
 
-        M = self.get_yellow_moments(img)
+        M = self.get_yellow_moments(img = None)
         
         img = self.getImage(hsv=True)
         seno = self.get_PDconstants(img)
@@ -230,8 +230,8 @@ class Robot:
 
             err = cx - self.getWidth()/2
 
-            vel_linear = 0.5*seno
-            vel_ang = -float(err) / 100
+            vel_linear = 0.75*seno
+            vel_ang = (-float(err) / 100)*seno
 
             self.setVelocity(vel_linear, vel_ang)
 
